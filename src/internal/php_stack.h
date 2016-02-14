@@ -1,16 +1,16 @@
-#ifndef PHP_DS_STACK_H
-#define PHP_DS_STACK_H
+#ifndef DS_STACK_H
+#define DS_STACK_H
 
 #include "php.h"
 #include "zend_exceptions.h"
 #include "zend_interfaces.h"
 #include "ext/spl/spl_iterators.h"
 
-#include "php_vector.h"
+#include "ds_vector.h"
 
 typedef struct _Stack {
     zend_object     std;
-    Vector         *vector;
+    ds_vector_t         *vector;
 } Stack;
 
 #define STACK_SIZE(s) ((s)->vector->size)
@@ -33,7 +33,7 @@ do { \
 do {                                                \
     zval _tmp;                                      \
                                                     \
-    Vector *_v = stack->vector;                     \
+    ds_vector_t *_v = stack->vector;                     \
     zval *_end = _v->buffer;                        \
     zval *_pos = _end + _v->size - 1;               \
                                                     \

@@ -1,5 +1,6 @@
 #include "../common.h"
-#include "../internal/php_vector.h"
+// #include "../internal/ds_vector.h"
+#include "../php/php_ds_vector.h"
 #include "../iterators/php_vector_iterator.h"
 #include "../handlers/php_vector_handlers.h"
 #include "php_ce_sequence.h"
@@ -7,17 +8,15 @@
 
 #define METHOD(name) PHP_METHOD(Vector, name)
 
-zend_class_entry *vector_ce;
-
 METHOD(__construct)
 {
     PARSE_OPTIONAL_ZVAL(values);
 
     if (values) {
         if (Z_TYPE_P(values) == IS_LONG) {
-            vector_user_allocate(THIS_VECTOR(), Z_LVAL_P(values));
+            ds_vector_user_allocate(THIS_VECTOR(), Z_LVAL_P(values));
         } else {
-            vector_push_all(THIS_VECTOR(), values);
+            ds_vector_push_all(THIS_VECTOR(), values);
         }
     }
 }
@@ -25,7 +24,7 @@ METHOD(__construct)
 METHOD(allocate)
 {
     PARSE_LONG(capacity);
-    vector_user_allocate(THIS_VECTOR(), capacity);
+    ds_vector_user_allocate(THIS_VECTOR(), capacity);
 }
 
 METHOD(capacity)
@@ -37,19 +36,19 @@ METHOD(capacity)
 METHOD(clear)
 {
     PARSE_NONE;
-    vector_clear(THIS_VECTOR());
+    ds_vector_clear(THIS_VECTOR());
 }
 
 METHOD(contains)
 {
     PARSE_VARIADIC_ZVAL();
-    RETURN_BOOL(vector_contains_va(THIS_VECTOR(), argc, argv));
+    RETURN_BOOL(ds_vector_contains_va(THIS_VECTOR(), argc, argv));
 }
 
 METHOD(copy)
 {
     PARSE_NONE;
-    RETURN_OBJ(vector_create_clone(THIS_VECTOR()));
+    RETURN_OBJ(php_ds_vector_create_clone(THIS_VECTOR()));
 }
 
 METHOD(count)
@@ -62,34 +61,34 @@ METHOD(filter)
 {
     if (ZEND_NUM_ARGS()) {
         PARSE_CALLABLE();
-        vector_filter_callback(THIS_VECTOR(), return_value, FCI_ARGS);
+        RETURN_VECTOR(ds_vector_filter_callback(THIS_VECTOR(), FCI_ARGS));
     } else {
-        vector_filter(THIS_VECTOR(), return_value);
+        RETURN_VECTOR(ds_vector_filter(THIS_VECTOR()));
     }
 }
 
 METHOD(find)
 {
     PARSE_ZVAL(value);
-    vector_find(THIS_VECTOR(), value, return_value);
+    ds_vector_find(THIS_VECTOR(), value, return_value);
 }
 
 METHOD(first)
 {
     PARSE_NONE;
-    RETURN_ZVAL_COPY(vector_get_first(THIS_VECTOR()));
+    RETURN_ZVAL_COPY(ds_vector_get_first(THIS_VECTOR()));
 }
 
 METHOD(get)
 {
     PARSE_LONG(index);
-    RETURN_ZVAL_COPY(vector_get(THIS_VECTOR(), index));
+    RETURN_ZVAL_COPY(ds_vector_get(THIS_VECTOR(), index));
 }
 
 METHOD(insert)
 {
     PARSE_LONG_AND_VARARGS(index);
-    vector_insert_va(THIS_VECTOR(), index, argc, argv);
+    ds_vector_insert_va(THIS_VECTOR(), index, argc, argv);
 }
 
 METHOD(isEmpty)
@@ -102,67 +101,66 @@ METHOD(join)
 {
     if (ZEND_NUM_ARGS()) {
         PARSE_STRING();
-        vector_join(THIS_VECTOR(), str, len, return_value);
+        ds_vector_join(THIS_VECTOR(), str, len, return_value);
     } else {
-        vector_join(THIS_VECTOR(), NULL, 0, return_value);
+        ds_vector_join(THIS_VECTOR(), NULL, 0, return_value);
     }
 }
 
 METHOD(jsonSerialize)
 {
     PARSE_NONE;
-    vector_to_array(THIS_VECTOR(), return_value);
+    ds_vector_to_array(THIS_VECTOR(), return_value);
 }
 
 METHOD(last)
 {
     PARSE_NONE;
-    RETURN_ZVAL_COPY(vector_get_last(THIS_VECTOR()));
+    RETURN_ZVAL_COPY(ds_vector_get_last(THIS_VECTOR()));
 }
 
 METHOD(map)
 {
     PARSE_CALLABLE();
-    vector_map(THIS_VECTOR(), return_value, FCI_ARGS);
+    RETURN_VECTOR(ds_vector_map(THIS_VECTOR(), FCI_ARGS));
 }
-
 
 METHOD(pop)
 {
     PARSE_NONE;
-    vector_pop(THIS_VECTOR(), return_value);
+    ds_vector_pop(THIS_VECTOR(), return_value);
 }
 
 METHOD(push)
 {
     PARSE_VARIADIC_ZVAL();
-    vector_push_va(THIS_VECTOR(), argc, argv);
+    ds_vector_push_va(THIS_VECTOR(), argc, argv);
 }
 
 METHOD(pushAll)
 {
     PARSE_ZVAL(values);
-    vector_push_all(THIS_VECTOR(), values);
+    ds_vector_push_all(THIS_VECTOR(), values);
 }
 
 METHOD(reduce)
 {
     PARSE_CALLABLE_AND_OPTIONAL_ZVAL(initial);
-    vector_reduce(THIS_VECTOR(), initial, return_value, FCI_ARGS);
+    ds_vector_reduce(THIS_VECTOR(), initial, return_value, FCI_ARGS);
 }
 
 METHOD(remove)
 {
     PARSE_LONG(index);
-    vector_remove(THIS_VECTOR(), index, return_value);
+    ds_vector_remove(THIS_VECTOR(), index, return_value);
 }
 
 METHOD(reverse)
 {
     PARSE_NONE;
     {
-        Vector *vector = vector_create_copy(THIS_VECTOR());
-        vector_reverse(vector);
+        ds_vector_t *vector = ds_vector_clone(THIS_VECTOR());
+        ds_vector_reverse(vector);
         RETURN_VECTOR(vector);
     }
 }
@@ -170,43 +168,43 @@ METHOD(reverse)
 METHOD(rotate)
 {
     PARSE_LONG(rotations);
-    vector_rotate(THIS_VECTOR(), rotations);
+    ds_vector_rotate(THIS_VECTOR(), rotations);
 }
 
 METHOD(set)
 {
     PARSE_LONG_AND_ZVAL(index, value);
-    vector_set(THIS_VECTOR(), index, value);
+    ds_vector_set(THIS_VECTOR(), index, value);
 }
 
 METHOD(shift)
 {
     PARSE_NONE;
-    vector_shift(THIS_VECTOR(), return_value);
+    ds_vector_shift(THIS_VECTOR(), return_value);
 }
 
 METHOD(slice)
 {
-    Vector *vector = THIS_VECTOR();
+    ds_vector_t *vector = THIS_VECTOR();
 
     if (ZEND_NUM_ARGS() > 1) {
         PARSE_LONG_AND_LONG(index, length);
-        vector_slice(vector, index, length, return_value);
+        RETURN_VECTOR(ds_vector_slice(vector, index, length));
     } else {
         PARSE_LONG(index);
-        vector_slice(vector, index, vector->size, return_value);
+        RETURN_VECTOR(ds_vector_slice(vector, index, vector->size));
     }
 }
 
 METHOD(sort)
 {
-    Vector *vector = vector_create_copy(THIS_VECTOR());
+    ds_vector_t *vector = ds_vector_clone(THIS_VECTOR());
 
     if (ZEND_NUM_ARGS()) {
         PARSE_COMPARE_CALLABLE();
-        vector_sort_callback(vector);
+        ds_vector_sort_callback(vector);
     } else {
-        vector_sort(vector);
+        ds_vector_sort(vector);
     }
 
     RETURN_VECTOR(vector);
@@ -215,13 +213,13 @@ METHOD(sort)
 METHOD(toArray)
 {
     PARSE_NONE;
-    vector_to_array(THIS_VECTOR(), return_value);
+    ds_vector_to_array(THIS_VECTOR(), return_value);
 }
 
 METHOD(unshift)
 {
     PARSE_VARIADIC_ZVAL();
-    vector_unshift_va(THIS_VECTOR(), argc, argv);
+    ds_vector_unshift_va(THIS_VECTOR(), argc, argv);
 }
 
 void register_vector()
@@ -236,13 +234,13 @@ void register_vector()
 
     INIT_CLASS_ENTRY(ce, COLLECTION_NS(Vector), methods);
 
-    vector_ce = zend_register_internal_class(&ce);
-    vector_ce->ce_flags      |= ZEND_ACC_FINAL;
-    vector_ce->create_object  = vector_create_object;
-    vector_ce->get_iterator   = vector_get_iterator;
-    vector_ce->serialize      = vector_serialize;
-    vector_ce->unserialize    = vector_unserialize;
+    ds_vector_ce = zend_register_internal_class(&ce);
+    ds_vector_ce->ce_flags      |= ZEND_ACC_FINAL;
+    ds_vector_ce->create_object  = php_ds_vector_create_object;
+    ds_vector_ce->get_iterator   = ds_vector_get_iterator;
+    ds_vector_ce->serialize      = php_ds_vector_serialize;
+    ds_vector_ce->unserialize    = php_ds_vector_unserialize;
 
-    zend_class_implements(vector_ce, 1, sequence_ce);
+    zend_class_implements(ds_vector_ce, 1, sequence_ce);
     register_vector_handlers();
 }

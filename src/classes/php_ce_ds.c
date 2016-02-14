@@ -1,5 +1,5 @@
 #include "../common.h"
-#include "../internal/php_vector.h"
+#include "../internal/ds_vector.h"
 #include "../internal/php_deque.h"
 #include "../internal/php_stack.h"
 #include "../internal/php_queue.h"
@@ -7,6 +7,8 @@
 #include "../internal/php_map.h"
 #include "../internal/php_set.h"
 #include "../internal/php_pair.h"
+
+#include "../php/php_ds_vector.h"
 
 /**
  *
@@ -24,21 +26,21 @@ zend_class_entry *ds_ce;
 /**
  * ds::vector(...)
  */
-ARGINFO_OPTIONAL_ZVAL_RETURN_COLLECTION(vector, values, Vector);
+ARGINFO_OPTIONAL_ZVAL_RETURN_COLLECTION(vector, values, ds_vector_t);
 METHOD(vector)
 {
-    Vector *vector;
+    ds_vector_t *vector;
     PARSE_OPTIONAL_ZVAL(values);
 
     if (values) {
         if (Z_TYPE_P(values) == IS_LONG) {
-            vector = vector_init_ex(Z_LVAL_P(values));
+            vector = ds_vector_ex(Z_LVAL_P(values));
         } else {
-            vector = vector_init();
-            vector_push_all(vector, values);
+            vector = ds_vector();
+            ds_vector_push_all(vector, values);
         }
     } else {
-        vector = vector_init();
+        vector = ds_vector();
     }
 
     RETURN_VECTOR(vector);

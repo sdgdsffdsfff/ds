@@ -1,5 +1,5 @@
-#ifndef PHP_DS_CE_STACK_H
-#define PHP_DS_CE_STACK_H
+#ifndef DS_CE_STACK_H
+#define DS_CE_STACK_H
 
 extern zend_class_entry *stack_ce;
 
